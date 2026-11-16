@@ -1,0 +1,15 @@
+{
+	"name": "AzureDataFactory-Bank",
+	"properties": {
+		"trustModeClaimForMi": {
+			"value": "Disabled",
+			"editable": true
+		}
+	},
+	"location": "centralus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "09024c2c-ff3e-4838-95de-1dda84b41bdd",
+		"tenantId": "a222e323-f81b-430a-81ec-deafe00c703d"
+	}
+}
