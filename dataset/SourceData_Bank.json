@@ -7,10 +7,8 @@
 		},
 		"parameters": {
 			"Main_Folder": {
-				"type": "string"
-			},
-			"Directory_folder": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "landing-layer"
 			},
 			"Filename": {
 				"type": "string"
@@ -25,14 +23,7 @@
 					"value": "@dataset().Filename",
 					"type": "Expression"
 				},
-				"folderPath": {
-					"value": "@dataset().Directory_folder",
-					"type": "Expression"
-				},
-				"fileSystem": {
-					"value": "@dataset().Main_Folder",
-					"type": "Expression"
-				}
+				"fileSystem": "landing-layer"
 			},
 			"columnDelimiter": ",",
 			"escapeChar": "\\",
