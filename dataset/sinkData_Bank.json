@@ -1,0 +1,39 @@
+{
+	"name": "sinkData_Bank",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "Adls_bank_storage",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"Folder_name": {
+				"type": "string"
+			},
+			"File_name": {
+				"type": "string",
+				"defaultValue": "output.csv"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().File_name",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().Folder_name",
+					"type": "Expression"
+				},
+				"fileSystem": "bronze"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}
