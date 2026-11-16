@@ -1,0 +1,10 @@
+{
+	"name": "Adls_bank_storage",
+	"properties": {
+		"annotations": [],
+		"type": "AzureBlobFS",
+		"typeProperties": {
+			"url": "https://bankdataanalysis.dfs.core.windows.net/"
+		}
+	}
+}
