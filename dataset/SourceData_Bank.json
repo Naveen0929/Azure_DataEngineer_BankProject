@@ -1,0 +1,44 @@
+{
+	"name": "SourceData_Bank",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "Adls_bank_storage",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"Main_Folder": {
+				"type": "string"
+			},
+			"Directory_folder": {
+				"type": "string"
+			},
+			"Filename": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().Filename",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().Directory_folder",
+					"type": "Expression"
+				},
+				"fileSystem": {
+					"value": "@dataset().Main_Folder",
+					"type": "Expression"
+				}
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}
