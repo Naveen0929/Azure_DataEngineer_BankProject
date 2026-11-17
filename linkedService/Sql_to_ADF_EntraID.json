@@ -1,0 +1,14 @@
+{
+	"name": "Sql_to_ADF_EntraID",
+	"properties": {
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"server": "sql-bank-server.database.windows.net",
+			"database": "sql-bank",
+			"encrypt": "mandatory",
+			"trustServerCertificate": false,
+			"authenticationType": "SystemAssignedManagedIdentity"
+		}
+	}
+}
