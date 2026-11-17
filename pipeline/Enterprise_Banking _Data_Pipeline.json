@@ -30,6 +30,7 @@
 						"referenceName": "SourceData_Bank",
 						"type": "DatasetReference",
 						"parameters": {
+							"Main_Folder": "landing-layer",
 							"Filename": "ingestion_metadata.csv"
 						}
 					},

@@ -1,0 +1,16 @@
+{
+	"name": "ADF_to_sql",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "Sql_to_ADF_EntraID",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "CustomerCdcStage"
+		}
+	}
+}

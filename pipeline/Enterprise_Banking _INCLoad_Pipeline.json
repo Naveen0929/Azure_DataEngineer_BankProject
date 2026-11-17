@@ -1,0 +1,132 @@
+{
+	"name": "Enterprise_Banking _INCLoad_Pipeline",
+	"properties": {
+		"activities": [
+			{
+				"name": "Lookup_inc_cust",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "\nSELECT\n    table_name,\n    load_type,\n    last_commit_timestamp,\n    last_sequence_number,\n    last_successful_run_id\nFROM dbo.WatermarkControl\nWHERE table_name = 'customer_cdc';\n",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "SqltoADF",
+						"type": "DatasetReference"
+					}
+				}
+			},
+			{
+				"name": "Load_Inc_watermark",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Lookup_inc_cust",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false,
+						"disableMetricsCollection": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "SourceData_Bank",
+						"type": "DatasetReference",
+						"parameters": {
+							"Filename": "customer_cdc.csv"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "ADF_to_sql",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "UpdateWaterMark_Usp",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Load_Inc_watermark",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[usp_updatewatermark]",
+					"storedProcedureParameters": {
+						"run_id": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "Sql_to_ADF_EntraID",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"annotations": []
+	}
+}
