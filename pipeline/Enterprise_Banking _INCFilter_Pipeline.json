@@ -5,9 +5,14 @@
 			{
 				"name": "Data flow1",
 				"type": "ExecuteDataFlow",
-				"state": "Inactive",
-				"onInactiveMarkAs": "Succeeded",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "Lookup1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -20,24 +25,20 @@
 					"dataflow": {
 						"referenceName": "dataflow1",
 						"type": "DataFlowReference",
-						"parameters": {
-							"timestamp_lookup": {
-								"value": "'@{string(activity('Lookup1').output.firstRow.last_commit_timestamp)}'",
-								"type": "Expression"
-							}
-						},
 						"datasetParameters": {
 							"SourceCustomer": {
 								"Main_Folder": "landing-layer",
-								"Filename": {
-									"value": "@activity('Filter1').output.value.name",
-									"type": "Expression"
-								}
+								"Filename": "customer_cdc_batch2.csv"
 							},
 							"Destcustomer": {
-								"File_name": {
-									"value": "@activity('Filter1').output.value.name",
-									"type": "Expression"
+								"Folder_name": "customer_cdc",
+								"File_name": "customer_cdc_batch2.csv"
+							}
+						},
+						"linkedServiceParameters": {
+							"SourceCustomer": {
+								"schemaLinkedService": {
+									"Main_Folder": "landing-layer"
 								}
 							}
 						}
@@ -52,8 +53,6 @@
 			{
 				"name": "Lookup1",
 				"type": "Lookup",
-				"state": "Inactive",
-				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
@@ -78,6 +77,8 @@
 			{
 				"name": "Get Metadata1",
 				"type": "GetMetadata",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
@@ -107,6 +108,8 @@
 			{
 				"name": "Filter1",
 				"type": "Filter",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
 						"activity": "Get Metadata1",
@@ -130,13 +133,9 @@
 			{
 				"name": "ForEach1",
 				"type": "ForEach",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
-					{
-						"activity": "Lookup1",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					},
 					{
 						"activity": "Filter1",
 						"dependencyConditions": [
@@ -150,15 +149,36 @@
 						"value": "@activity('Filter1').output.value.name",
 						"type": "Expression"
 					},
-					"isSequential": true,
-					"activities": [
-						{
-							"name": "If Condition1",
-							"type": "IfCondition",
-							"dependsOn": [],
-							"userProperties": []
-						}
-					]
+					"isSequential": true
+				}
+			},
+			{
+				"name": "Get Metadata2",
+				"type": "GetMetadata",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "Bronze_files_checklist",
+						"type": "DatasetReference"
+					},
+					"fieldList": [],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "BinaryReadSettings"
+					}
 				}
 			}
 		],

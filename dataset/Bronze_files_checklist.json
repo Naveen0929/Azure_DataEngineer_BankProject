@@ -1,0 +1,17 @@
+{
+	"name": "Bronze_files_checklist",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "Adls_bank_storage",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileSystem": "bronze"
+			}
+		}
+	}
+}

@@ -27,9 +27,6 @@
 				}
 			],
 			"scriptLines": [
-				"parameters{",
-				"     timestamp_lookup as string",
-				"}",
 				"source(output(",
 				"          customer_id as string,",
 				"          operation_type as string,",
@@ -41,7 +38,7 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false) ~> SourceCustomer",
-				"SourceCustomer filter(toTimestamp(commit_timestamp)>toTimestamp($timestamp_lookup)) ~> filter1",
+				"SourceCustomer filter(toTimestamp(commit_timestamp) > toTimestamp($timestamp_lookup)) ~> filter1",
 				"filter1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     umask: 0022,",
