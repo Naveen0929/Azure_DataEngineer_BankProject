@@ -85,57 +85,20 @@
 				}
 			},
 			{
-				"name": "Data flow1",
-				"type": "ExecuteDataFlow",
-				"state": "Inactive",
-				"onInactiveMarkAs": "Succeeded",
-				"dependsOn": [],
-				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"dataflow": {
-						"referenceName": "dataflow2",
-						"type": "DataFlowReference",
-						"parameters": {
-							"Lookup_Timestamp": {
-								"value": "'@{string(activity('Lookup1').output.firstRow.last_commit_timestamp)}'",
-								"type": "Expression"
-							}
-						},
-						"datasetParameters": {
-							"SorceCustomer": {
-								"Main_Folder": "landing-layer",
-								"Filename": "customer_cdc_batch2.csv"
-							},
-							"sink1": {
-								"Folder_name": "customer_cdc",
-								"File_name": "output.csv"
-							}
-						}
-					},
-					"compute": {
-						"coreCount": 8,
-						"computeType": "General"
-					},
-					"traceLevel": "Fine"
-				}
-			},
-			{
 				"name": "ForEach1",
 				"type": "ForEach",
-				"state": "Inactive",
-				"onInactiveMarkAs": "Succeeded",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "Filter1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('Filter1').output.value.name",
+						"value": "@activity('Filter1').output.value",
 						"type": "Expression"
 					},
 					"isSequential": true,
@@ -155,7 +118,13 @@
 							"typeProperties": {
 								"dataset": {
 									"referenceName": "Bronze_files_checklist",
-									"type": "DatasetReference"
+									"type": "DatasetReference",
+									"parameters": {
+										"Filename": {
+											"value": "@item().name",
+											"type": "Expression"
+										}
+									}
 								},
 								"fieldList": [
 									"exists"
@@ -190,8 +159,6 @@
 									{
 										"name": "Data flow1_copy1",
 										"type": "ExecuteDataFlow",
-										"state": "Inactive",
-										"onInactiveMarkAs": "Succeeded",
 										"dependsOn": [],
 										"policy": {
 											"timeout": "0.12:00:00",
@@ -209,16 +176,23 @@
 													"Lookup_Timestamp": {
 														"value": "'@{string(activity('Lookup1').output.firstRow.last_commit_timestamp)}'",
 														"type": "Expression"
+													},
+													"Output_filename": {
+														"value": "'@{item().name}'",
+														"type": "Expression"
 													}
 												},
 												"datasetParameters": {
 													"SorceCustomer": {
 														"Main_Folder": "landing-layer",
-														"Filename": "customer_cdc_batch2.csv"
+														"Filename": {
+															"value": "@item().name",
+															"type": "Expression"
+														}
 													},
 													"sink1": {
 														"Folder_name": "customer_cdc",
-														"File_name": "output.csv"
+														"File_name": "@item().name"
 													}
 												}
 											},

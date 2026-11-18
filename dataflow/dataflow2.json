@@ -29,7 +29,7 @@
 			"scriptLines": [
 				"parameters{",
 				"     Lookup_Timestamp as string ('2026-11-15T23:11:00.0000000+00:00'),",
-				"     DF_filename as string",
+				"     Output_filename as string ('Outpu.csv')",
 				"}",
 				"source(output(",
 				"          customer_id as string,",
@@ -45,12 +45,13 @@
 				"SorceCustomer filter(toDate(commit_timestamp)>toDate($Lookup_Timestamp)) ~> filter1",
 				"filter1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     partitionFileNames:[''],",
+				"     partitionFileNames:[($Output_filename)],",
 				"     umask: 0022,",
 				"     preCommands: [],",
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> sink1"
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> sink1"
 			]
 		}
 	}
