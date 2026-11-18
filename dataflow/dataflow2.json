@@ -1,0 +1,57 @@
+{
+	"name": "dataflow2",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "SourceData_Bank",
+						"type": "DatasetReference"
+					},
+					"name": "SorceCustomer"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "sinkData_Bank",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "filter1"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     Lookup_Timestamp as string ('2026-11-15T23:11:00.0000000+00:00'),",
+				"     DF_filename as string",
+				"}",
+				"source(output(",
+				"          customer_id as string,",
+				"          operation_type as string,",
+				"          before_image as string,",
+				"          after_image as string,",
+				"          commit_timestamp as string,",
+				"          sequence_number as short",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> SorceCustomer",
+				"SorceCustomer filter(toDate(commit_timestamp)>toDate($Lookup_Timestamp)) ~> filter1",
+				"filter1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:[''],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sink1"
+			]
+		}
+	}
+}

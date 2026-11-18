@@ -3,54 +3,6 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Data flow1",
-				"type": "ExecuteDataFlow",
-				"dependsOn": [
-					{
-						"activity": "Lookup1",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"dataflow": {
-						"referenceName": "dataflow1",
-						"type": "DataFlowReference",
-						"datasetParameters": {
-							"SourceCustomer": {
-								"Main_Folder": "landing-layer",
-								"Filename": "customer_cdc_batch2.csv"
-							},
-							"Destcustomer": {
-								"Folder_name": "customer_cdc",
-								"File_name": "customer_cdc_batch2.csv"
-							}
-						},
-						"linkedServiceParameters": {
-							"SourceCustomer": {
-								"schemaLinkedService": {
-									"Main_Folder": "landing-layer"
-								}
-							}
-						}
-					},
-					"compute": {
-						"coreCount": 8,
-						"computeType": "General"
-					},
-					"traceLevel": "Fine"
-				}
-			},
-			{
 				"name": "Lookup1",
 				"type": "Lookup",
 				"dependsOn": [],
@@ -77,8 +29,6 @@
 			{
 				"name": "Get Metadata1",
 				"type": "GetMetadata",
-				"state": "Inactive",
-				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
@@ -108,11 +58,15 @@
 			{
 				"name": "Filter1",
 				"type": "Filter",
-				"state": "Inactive",
-				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
 						"activity": "Get Metadata1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Lookup1",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -131,30 +85,8 @@
 				}
 			},
 			{
-				"name": "ForEach1",
-				"type": "ForEach",
-				"state": "Inactive",
-				"onInactiveMarkAs": "Succeeded",
-				"dependsOn": [
-					{
-						"activity": "Filter1",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"userProperties": [],
-				"typeProperties": {
-					"items": {
-						"value": "@activity('Filter1').output.value.name",
-						"type": "Expression"
-					},
-					"isSequential": true
-				}
-			},
-			{
-				"name": "Get Metadata2",
-				"type": "GetMetadata",
+				"name": "Data flow1",
+				"type": "ExecuteDataFlow",
 				"state": "Inactive",
 				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [],
@@ -167,18 +99,140 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"dataset": {
-						"referenceName": "Bronze_files_checklist",
-						"type": "DatasetReference"
+					"dataflow": {
+						"referenceName": "dataflow2",
+						"type": "DataFlowReference",
+						"parameters": {
+							"Lookup_Timestamp": {
+								"value": "'@{string(activity('Lookup1').output.firstRow.last_commit_timestamp)}'",
+								"type": "Expression"
+							}
+						},
+						"datasetParameters": {
+							"SorceCustomer": {
+								"Main_Folder": "landing-layer",
+								"Filename": "customer_cdc_batch2.csv"
+							},
+							"sink1": {
+								"Folder_name": "customer_cdc",
+								"File_name": "output.csv"
+							}
+						}
 					},
-					"fieldList": [],
-					"storeSettings": {
-						"type": "AzureBlobFSReadSettings",
-						"enablePartitionDiscovery": false
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
 					},
-					"formatSettings": {
-						"type": "BinaryReadSettings"
-					}
+					"traceLevel": "Fine"
+				}
+			},
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Filter1').output.value.name",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Get Metadata2_copy1",
+							"type": "GetMetadata",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataset": {
+									"referenceName": "Bronze_files_checklist",
+									"type": "DatasetReference"
+								},
+								"fieldList": [
+									"exists"
+								],
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "BinaryReadSettings"
+								}
+							}
+						},
+						{
+							"name": "If Condition1",
+							"type": "IfCondition",
+							"dependsOn": [
+								{
+									"activity": "Get Metadata2_copy1",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"expression": {
+									"value": "@activity('Get Metadata2_copy1').output.exists",
+									"type": "Expression"
+								},
+								"ifFalseActivities": [
+									{
+										"name": "Data flow1_copy1",
+										"type": "ExecuteDataFlow",
+										"state": "Inactive",
+										"onInactiveMarkAs": "Succeeded",
+										"dependsOn": [],
+										"policy": {
+											"timeout": "0.12:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"dataflow": {
+												"referenceName": "dataflow2",
+												"type": "DataFlowReference",
+												"parameters": {
+													"Lookup_Timestamp": {
+														"value": "'@{string(activity('Lookup1').output.firstRow.last_commit_timestamp)}'",
+														"type": "Expression"
+													}
+												},
+												"datasetParameters": {
+													"SorceCustomer": {
+														"Main_Folder": "landing-layer",
+														"Filename": "customer_cdc_batch2.csv"
+													},
+													"sink1": {
+														"Folder_name": "customer_cdc",
+														"File_name": "output.csv"
+													}
+												}
+											},
+											"compute": {
+												"coreCount": 8,
+												"computeType": "General"
+											},
+											"traceLevel": "Fine"
+										}
+									}
+								]
+							}
+						}
+					]
 				}
 			}
 		],
