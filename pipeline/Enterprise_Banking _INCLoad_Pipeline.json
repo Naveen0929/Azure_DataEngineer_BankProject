@@ -79,6 +79,7 @@
 						"referenceName": "SourceData_Bank",
 						"type": "DatasetReference",
 						"parameters": {
+							"Main_Folder": "landing-layer",
 							"Filename": "customer_cdc.csv"
 						}
 					}

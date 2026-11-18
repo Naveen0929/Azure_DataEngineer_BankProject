@@ -28,11 +28,7 @@
 					},
 					"dataset": {
 						"referenceName": "SourceData_Bank",
-						"type": "DatasetReference",
-						"parameters": {
-							"Main_Folder": "landing-layer",
-							"Filename": "ingestion_metadata.csv"
-						}
+						"type": "DatasetReference"
 					},
 					"firstRowOnly": false
 				}
@@ -106,11 +102,7 @@
 									"referenceName": "SourceData_Bank",
 									"type": "DatasetReference",
 									"parameters": {
-										"Main_Folder": "landing-layer",
-										"Filename": {
-											"value": "@item().source_file",
-											"type": "Expression"
-										}
+										"Main_Folder": "landing-layer"
 									}
 								}
 							],
