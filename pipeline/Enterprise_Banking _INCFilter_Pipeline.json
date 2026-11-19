@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Lookup1",
+				"name": "LOOKUP_watermrk_SQLtable",
 				"type": "Lookup",
 				"dependsOn": [],
 				"policy": {
@@ -27,7 +27,7 @@
 				}
 			},
 			{
-				"name": "Get Metadata1",
+				"name": "Get Metadata_Of _Landinglayer",
 				"type": "GetMetadata",
 				"dependsOn": [],
 				"policy": {
@@ -48,6 +48,7 @@
 					],
 					"storeSettings": {
 						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
 						"enablePartitionDiscovery": false
 					},
 					"formatSettings": {
@@ -56,17 +57,17 @@
 				}
 			},
 			{
-				"name": "Filter1",
+				"name": "Filter_CDC_Files",
 				"type": "Filter",
 				"dependsOn": [
 					{
-						"activity": "Get Metadata1",
+						"activity": "Get Metadata_Of _Landinglayer",
 						"dependencyConditions": [
 							"Succeeded"
 						]
 					},
 					{
-						"activity": "Lookup1",
+						"activity": "LOOKUP_watermrk_SQLtable",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -75,7 +76,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('Get Metadata1').output.childItems",
+						"value": "@activity('Get Metadata_Of _Landinglayer').output.childItems",
 						"type": "Expression"
 					},
 					"condition": {
@@ -85,11 +86,11 @@
 				}
 			},
 			{
-				"name": "ForEach1",
+				"name": "ForEach_Loop_CDCFiles",
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "Filter1",
+						"activity": "Filter_CDC_Files",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -98,13 +99,13 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('Filter1').output.value",
+						"value": "@activity('Filter_CDC_Files').output.value",
 						"type": "Expression"
 					},
 					"isSequential": true,
 					"activities": [
 						{
-							"name": "Get Metadata2_copy1",
+							"name": "Get Metadata_SinkFiles",
 							"type": "GetMetadata",
 							"dependsOn": [],
 							"policy": {
@@ -131,6 +132,7 @@
 								],
 								"storeSettings": {
 									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
 									"enablePartitionDiscovery": false
 								},
 								"formatSettings": {
@@ -139,11 +141,11 @@
 							}
 						},
 						{
-							"name": "If Condition1",
+							"name": "If Condition_toCheck _Fileexistin_sink",
 							"type": "IfCondition",
 							"dependsOn": [
 								{
-									"activity": "Get Metadata2_copy1",
+									"activity": "Get Metadata_SinkFiles",
 									"dependencyConditions": [
 										"Succeeded"
 									]
@@ -152,12 +154,13 @@
 							"userProperties": [],
 							"typeProperties": {
 								"expression": {
-									"value": "@activity('Get Metadata2_copy1').output.exists",
+									"value": "@activity('Get Metadata_SinkFiles').output.exists",
 									"type": "Expression"
 								},
 								"ifFalseActivities": [
 									{
-										"name": "Data flow1_copy1",
+										"name": "Data flow_filter",
+										"description": "Filter the rows> watermark time stamp which is output of lookup",
 										"type": "ExecuteDataFlow",
 										"dependsOn": [],
 										"policy": {
@@ -174,7 +177,7 @@
 												"type": "DataFlowReference",
 												"parameters": {
 													"Lookup_Timestamp": {
-														"value": "'@{string(activity('Lookup1').output.firstRow.last_commit_timestamp)}'",
+														"value": "'@{string(activity('LOOKUP_watermrk_SQLtable').output.firstRow.last_commit_timestamp)}'",
 														"type": "Expression"
 													},
 													"Output_filename": {
@@ -202,11 +205,134 @@
 											},
 											"traceLevel": "Fine"
 										}
+									},
+									{
+										"name": "Copy from sink to sql table",
+										"description": "inserting the data into the CustomerCdcStage table",
+										"type": "Copy",
+										"dependsOn": [
+											{
+												"activity": "Data flow_filter",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"policy": {
+											"timeout": "0.12:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"source": {
+												"type": "DelimitedTextSource",
+												"storeSettings": {
+													"type": "AzureBlobFSReadSettings",
+													"recursive": true,
+													"enablePartitionDiscovery": false
+												},
+												"formatSettings": {
+													"type": "DelimitedTextReadSettings"
+												}
+											},
+											"sink": {
+												"type": "AzureSqlSink",
+												"preCopyScript": "TRUNCATE TABLE dbo.CustomerCdcStage;",
+												"writeBehavior": "insert",
+												"sqlWriterUseTableLock": false,
+												"disableMetricsCollection": false
+											},
+											"enableStaging": false,
+											"translator": {
+												"type": "TabularTranslator",
+												"typeConversion": true,
+												"typeConversionSettings": {
+													"allowDataTruncation": true,
+													"treatBooleanAsNumber": false
+												}
+											}
+										},
+										"inputs": [
+											{
+												"referenceName": "sinkData_Bank",
+												"type": "DatasetReference",
+												"parameters": {
+													"Folder_name": "customer_cdc",
+													"File_name": {
+														"value": "@item().name",
+														"type": "Expression"
+													}
+												}
+											}
+										],
+										"outputs": [
+											{
+												"referenceName": "ADF_to_sql",
+												"type": "DatasetReference"
+											}
+										]
+									},
+									{
+										"name": "Stored procedure1_copy1_copy1",
+										"type": "SqlServerStoredProcedure",
+										"dependsOn": [
+											{
+												"activity": "Copy from sink to sql table",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"policy": {
+											"timeout": "0.12:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"storedProcedureName": "[dbo].[usp_ApplyCustomerCDC]"
+										},
+										"linkedServiceName": {
+											"referenceName": "Sql_to_ADF_EntraID",
+											"type": "LinkedServiceReference"
+										}
 									}
 								]
 							}
 						}
 					]
+				}
+			},
+			{
+				"name": "Watermark update SP",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "ForEach_Loop_CDCFiles",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[usp_updatewatermark]"
+				},
+				"linkedServiceName": {
+					"referenceName": "Sql_to_ADF_EntraID",
+					"type": "LinkedServiceReference"
 				}
 			}
 		],
