@@ -240,10 +240,8 @@
 											},
 											"sink": {
 												"type": "AzureSqlSink",
-												"preCopyScript": "TRUNCATE TABLE dbo.CustomerCdcStage;",
 												"writeBehavior": "insert",
-												"sqlWriterUseTableLock": false,
-												"disableMetricsCollection": false
+												"sqlWriterUseTableLock": false
 											},
 											"enableStaging": false,
 											"translator": {
@@ -328,7 +326,16 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"storedProcedureName": "[dbo].[usp_updatewatermark]"
+					"storedProcedureName": "[dbo].[usp_updatewatermark]",
+					"storedProcedureParameters": {
+						"run_id": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
 				},
 				"linkedServiceName": {
 					"referenceName": "Sql_to_ADF_EntraID",
