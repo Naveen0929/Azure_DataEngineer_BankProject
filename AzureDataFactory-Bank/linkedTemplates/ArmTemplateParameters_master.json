@@ -8,6 +8,12 @@
 		"Adls_bank_storage_properties_typeProperties_url": {
 			"value": "https://bankdataanalysis.dfs.core.windows.net/"
 		},
+		"Sql_to_ADF_EntraID_properties_typeProperties_server": {
+			"value": "sql-bank-server.database.windows.net"
+		},
+		"Sql_to_ADF_EntraID_properties_typeProperties_database": {
+			"value": "sql-bank"
+		},
 		"containerUri": {
 			"value": ""
 		},
